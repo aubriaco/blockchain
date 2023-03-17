@@ -1,6 +1,6 @@
 #ifndef __I_NET_INCLUDED__
 #define __I_NET_INCLUDED__
-#include "DPacket.h"
+#include "CPacket.h"
 
 namespace blockchain
 {
@@ -10,8 +10,8 @@ namespace blockchain
         {
         public:
             int mSocket;
-            DPacket recvPacket();
-            void sendPacket(DPacket* packet);
+            CPacket recvPacket();
+            void sendPacket(CPacket* packet);
         protected:
             INet();
         private:

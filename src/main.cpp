@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 {
 	cout << "Start.\n";
 
-	CChain chain(false, "127.0.0.1", 1, storage::EST_LOCAL);
+	CChain chain("127.0.0.1", false, "127.0.0.1", 1, storage::EST_LOCAL);
 	gChain = &chain;
 
 	cout << "Chain intialized!\n";

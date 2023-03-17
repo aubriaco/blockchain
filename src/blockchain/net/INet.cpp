@@ -11,26 +11,29 @@ namespace blockchain
             mSocket = 0;
         }
 
-        DPacket INet::recvPacket()
+        CPacket INet::recvPacket()
         {
             if(mSocket == 0)
                 throw std::runtime_error("INet: Socket is null.");
-            DPacket packet;
+            CPacket packet;
             packet.mVersion = recvUInt();
             packet.mMessageType = (EMessageType)recvUInt();
-            packet.mDataSize = recvUInt64();
+            packet.mDataSize = recvUInt();
             if(packet.mDataSize != 0)
+            {
                 packet.mData = recvDataAlloc(packet.mDataSize);
+                packet.mTrackDataAlloc = true;
+            }
             return packet;
         }
 
-        void INet::sendPacket(DPacket* packet)
+        void INet::sendPacket(CPacket* packet)
         {
             if(mSocket == 0)
                 throw std::runtime_error("INet: Socket is null.");
             sendUInt(packet->mVersion);
             sendUInt(packet->mMessageType);
-            sendUInt64(packet->mDataSize);
+            sendUInt(packet->mDataSize);
             if(packet->mDataSize != 0 && packet->mData)
                 sendData(packet->mData, packet->mDataSize);
         }

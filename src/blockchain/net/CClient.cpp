@@ -6,7 +6,7 @@
 #include <string.h>
 
 
-#define PCHAIN ((CChain*)chain)
+#define PCHAIN ((CChain*)mChain)
 
 namespace blockchain
 {
@@ -79,24 +79,50 @@ namespace blockchain
 
 
                 bool pingConfirm = false;
-    
+
+                
+                CPacket writePacket, gotPacket;
+                writePacket.mMessageType = EMT_NODE_REGISTER;
+                mLog.writeLine("Hostname size: " + std::to_string(PCHAIN->getHostName().size()));
+                writePacket.setData((uint8_t*)PCHAIN->getHostName().c_str(), PCHAIN->getHostName().size());
+                sendPacket(&writePacket);
+
+                gotPacket = recvPacket();
+                gotPacket.destroyData();
+                if(gotPacket.mMessageType != EMT_ACK)
+                    throw std::runtime_error("Server has rejected client.");
+
+                mLog.writeLine("Server has acknoledged client.");
+
+                writePacket.reset();
+                writePacket.mMessageType = EMT_NODE_REGISTER_PORT;
+                uint32_t netPort = PCHAIN->getNetPort();
+                writePacket.setData((uint8_t*)&netPort, sizeof(uint32_t));
+                sendPacket(&writePacket);
+
+                gotPacket = recvPacket();
+                gotPacket.destroyData();
+                if(gotPacket.mMessageType != EMT_ACK)
+                    throw std::runtime_error("Server has rejected client port.");
+
                 while(mRunning)
                 {
-                    DPacket writePacket;
                     writePacket.mMessageType = EMT_PING;
                     sendPacket(&writePacket);
-                    DPacket gotPacket = recvPacket();
+                    gotPacket = recvPacket();
 
-                    if(gotPacket.mMessageType != EMT_PING)
+                    if(gotPacket.mMessageType != EMT_PING)                    
                         throw std::runtime_error("Failed to get ping back from server.");
                     else if(!pingConfirm)
                     {
                         mLog.writeLine("Confirmed ping from server. Will continue to ping...");
                         pingConfirm = true;
                     }
-
+                    gotPacket.destroyData();
                     usleep(5000);
                 }
+
+                gotPacket.destroyData();
 
             }
             catch(std::runtime_error e)

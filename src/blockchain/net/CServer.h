@@ -1,6 +1,7 @@
 #ifndef __C_SERVER_INCLUDED__
 #define __C_SERVER_INCLUDED__
 #include "INet.h"
+#include "CNodeInfo.h"
 #include "../CLog.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -8,6 +9,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #include <string.h>
+#include <vector>
 
 namespace blockchain
 {
@@ -17,6 +19,7 @@ namespace blockchain
         {
         private:
             void* mChain;
+            std::vector<CNodeInfo> mNodeList;
             uint32_t mListenPort;
             int mListenerSocket;
             int mBacklog;
@@ -52,6 +55,9 @@ namespace blockchain
             void startClient(int socket);
             static void* static_client(void* param);
             void client(CSocketPackage* pkg);
+
+            void addNodeToList(const std::string& hostname, uint32_t port);
+
         public:
             CServer(void* chain, uint32_t listenPort);
             ~CServer();

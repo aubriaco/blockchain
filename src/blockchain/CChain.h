@@ -18,6 +18,7 @@ namespace blockchain
         CBlock* mCurrentBlock;      // Pointer to the current block &mChain.last()
         int mDifficulty;            // Difficulty
         storage::IStorage* mStorage; //
+        std::string mHostName;
         uint32_t mNetPort;
         net::CServer* mServer;
         std::vector<net::CClient*> mClients;
@@ -26,8 +27,8 @@ namespace blockchain
         
         CLog mLog;
     public:
-        CChain(int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE);
-        CChain(bool newChain, const std::string& connectToNode = std::string(), int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE);     //
+        CChain(const std::string& hostname, int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE);
+        CChain(const std::string& hostname, bool newChain, const std::string& connectToNode = std::string(), int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE);     //
         ~CChain();                                                                          //
         void appendToCurrentBlock(uint8_t* data, uint32_t size); 
         void nextBlock(bool save = true);       // Continue to next block
@@ -37,6 +38,9 @@ namespace blockchain
         bool isValid();                                                                 // if the chain is valid
         void stop();
         bool isRunning();
+        std::string getHostName();
+        uint32_t getNetPort();
+        void connectNewClient(const std::string& hostname, uint32_t port);
     };
 
 }

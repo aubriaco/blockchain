@@ -4,11 +4,12 @@
 
 namespace blockchain
 {
-    CChain::CChain(int difficulty, storage::E_STORAGE_TYPE storageType) : mLog("Chain")
+    CChain::CChain(const std::string& hostname, int difficulty, storage::E_STORAGE_TYPE storageType) : mLog("Chain")
     {
         CLog::open(false);
         mRunning = true;
         mStopped = false;
+        mHostName = hostname;
         mDifficulty = difficulty;
         mNetPort = 7698;
         mStorage = storage::createStorage(storageType);  // initialize storage
@@ -21,15 +22,13 @@ namespace blockchain
         mServer->start();
     }
 
-    CChain::CChain(bool newChain, const std::string& connectToNode, int difficulty, storage::E_STORAGE_TYPE storageType) : CChain(difficulty, storageType)
+    CChain::CChain(const std::string& hostname, bool newChain, const std::string& connectToNode, int difficulty, storage::E_STORAGE_TYPE storageType) : CChain(hostname, difficulty, storageType)
     {
         if(!newChain)
         {
             if(connectToNode.empty())
                 throw std::runtime_error("When not creating a new chain, you must specify 'connectToNode'.");
-            net::CClient* client = new net::CClient(this, connectToNode, mNetPort);
-            mClients.push_back(client);
-            client->start();
+            connectNewClient(hostname, mNetPort);
         }
     }
 
@@ -118,4 +117,20 @@ namespace blockchain
         return !mStopped;
     }
 
+    std::string CChain::getHostName()
+    {
+        return mHostName;
+    }
+
+    uint32_t CChain::getNetPort()
+    {
+        return mNetPort;
+    }
+
+    void CChain::connectNewClient(const std::string& hostname, uint32_t port)
+    {
+        net::CClient* client = new net::CClient(this, hostname, port);
+        mClients.push_back(client);
+        client->start();
+    }
 }

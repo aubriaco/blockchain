@@ -9,6 +9,10 @@ namespace blockchain
         {
             EMT_NULL,
             EMT_PING,
+            EMT_ACK,
+            EMT_ERR,
+            EMT_NODE_REGISTER,
+            EMT_NODE_REGISTER_PORT,
             EMT_COUNT
         };
     }

@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define PCHAIN ((CChain*)chain)
+#define PCHAIN ((CChain*)mChain)
 
 namespace blockchain
 {
@@ -136,22 +136,64 @@ namespace blockchain
                 if(setsockopt(pkg->mSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
                     std::runtime_error("Could not setup socket timeout.");
 
+                bool clientApproved = false;
                 bool pingConfirm = false;
     
                 while(mRunning && pkg->mRunning)
                 {
-                    DPacket gotPacket = pkg->recvPacket();
-                    if(gotPacket.mMessageType == EMT_PING)
+                    CPacket gotPacket = pkg->recvPacket();
+                    if(gotPacket.mMessageType == EMT_NODE_REGISTER)
                     {
-                        if(!pingConfirm)
-                        {
-                            mLog.writeLine("Confirmed ping from client. Pings are now silent.");
-                            pingConfirm = true;
-                        }
+                        
+
+                        std::string clientHostName((char*)gotPacket.mData, gotPacket.mDataSize);
+                        gotPacket.reset();
+                        gotPacket.mMessageType = EMT_ACK;
                         pkg->sendPacket(&gotPacket);
+                        mLog.writeLine("Got client hostname: " + clientHostName);
+
+                        gotPacket = pkg->recvPacket();
+                        if(gotPacket.mMessageType != EMT_NODE_REGISTER_PORT)
+                        {
+                            gotPacket.destroyData();
+                            throw std::runtime_error("Expecting EMT_NODE_REGISTER_PORT.");
+                        }
+
+                        uint32_t clientPort = *((uint32_t*)gotPacket.mData);
+
+                        gotPacket.reset();
+                        gotPacket.mMessageType = EMT_ACK;
+                        pkg->sendPacket(&gotPacket);
+
+                        addNodeToList(clientHostName, clientPort);
+
+                        mLog.writeLine("Acknoledge client.");
+                        clientApproved = true;
                     }
                     else
-                        throw std::runtime_error(std::string("Unknown packet received: ") + std::to_string(gotPacket.mMessageType));
+                    {
+                        if(!clientApproved)
+                        {
+                            gotPacket.destroyData();
+                            throw std::runtime_error("Client is not approved for anything except EMT_NODE_REGISTER.");
+                        }
+
+                        if(gotPacket.mMessageType == EMT_PING)
+                        {
+                            if(!pingConfirm)
+                            {
+                                mLog.writeLine("Confirmed ping from client. Pings are now silent.");
+                                pingConfirm = true;
+                            }
+                            pkg->sendPacket(&gotPacket);
+                        }
+                        else
+                        {
+                            gotPacket.destroyData();
+                            throw std::runtime_error(std::string("Unknown packet received: ") + std::to_string(gotPacket.mMessageType));
+                        }
+                    }
+                    gotPacket.destroyData();
                 }
             }
             catch(std::runtime_error e)
@@ -161,6 +203,29 @@ namespace blockchain
             close(pkg->mSocket);
             mLog.writeLine("Closed node.");
             delete pkg;            
+        }
+
+        void CServer::addNodeToList(const std::string& hostname, uint32_t port)
+        {
+            for(std::vector<CNodeInfo>::iterator it = mNodeList.begin(); it != mNodeList.end(); ++it)
+            {
+                if((*it).mHostName == hostname)
+                {                    
+                    (*it).seen();
+                    mLog.writeLine("Found node in list: " + hostname);
+                    if((*it).mPort != port)
+                    {
+                        (*it).mPort = port;
+                        mLog.writeLine("Port was updated to: " + std::to_string(port));
+                    }
+                    return;
+                }
+            }
+            mNodeList.push_back(CNodeInfo(hostname, port));
+            mLog.writeLine("Added new node to list: " + hostname);
+
+            if(hostname != PCHAIN->getHostName())   // avoid connecting eternally to itself
+                PCHAIN->connectNewClient(hostname, port);
         }
     }
 }
