@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 ## Use the variable PROJECT_NAME for changing the target name
-set( PROJECT_NAME "simple-blockchain" )
+set( PROJECT_NAME "blockchain" )
 
 ## Set our project name
 project(${PROJECT_NAME})
