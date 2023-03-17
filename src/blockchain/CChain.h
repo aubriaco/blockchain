@@ -20,7 +20,7 @@ namespace blockchain
         storage::IStorage* mStorage; //
         uint32_t mNetPort;
         net::CServer* mServer;
-        net::CClient* mClient;
+        std::vector<net::CClient*> mClients;
         bool mRunning;
         bool mStopped;
         

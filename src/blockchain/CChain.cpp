@@ -13,7 +13,6 @@ namespace blockchain
         mNetPort = 7698;
         mStorage = storage::createStorage(storageType);  // initialize storage
         mServer = new net::CServer(this, mNetPort);
-        mClient = 0;
         CBlock* block = new CBlock(0);
         mChain.push_back(block);  // First block (genesis)
         block->mine(mDifficulty);
@@ -28,21 +27,29 @@ namespace blockchain
         {
             if(connectToNode.empty())
                 throw std::runtime_error("When not creating a new chain, you must specify 'connectToNode'.");
-            mClient = new net::CClient(this, connectToNode, mNetPort);
-            mClient->start();
+            net::CClient* client = new net::CClient(this, connectToNode, mNetPort);
+            mClients.push_back(client);
+            client->start();
         }
     }
 
     CChain::~CChain()
     {
-        if(mClient)
-            delete mClient;
+        if(mClients.size() != 0)
+        {
+            for(std::vector<net::CClient*>::iterator it = mClients.begin(); it != mClients.end(); ++it)
+            {
+                delete (*it);
+            }
+            mClients.clear();
+        }
         delete mServer;
         mStorage->dispose();
         for(std::vector<CBlock*>::iterator it = mChain.begin(); it != mChain.end(); ++it)
         {
             delete (*it);
         }
+        mChain.clear();
         CLog::close();
         mRunning = false;
     }
@@ -95,8 +102,13 @@ namespace blockchain
     void CChain::stop()
     {
         mRunning = false;
-        if(mClient)
-            mClient->stop();
+        if(mClients.size() != 0)
+        {
+            for(std::vector<net::CClient*>::iterator it = mClients.begin(); it != mClients.end(); ++it)
+            {
+                (*it)->stop();
+            }
+        }
         mServer->stop();
         mStopped = true;
     }
