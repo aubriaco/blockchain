@@ -11,7 +11,7 @@ namespace blockchain
     namespace net
     {
 
-        CServer::CServer(void* chain, uint32_t listenPort)
+        CServer::CServer(void* chain, uint32_t listenPort) : mLog("Server")
         {
             mChain = chain;
             mListenPort = listenPort;
@@ -81,22 +81,30 @@ namespace blockchain
 
         void CServer::worker()
         {
-            while(mRunning)
+            try
             {
-                struct sockaddr clientAddr;
-                socklen_t clientAddrLen = sizeof(clientAddr);
-                int clientSocket = accept(mListenerSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
-                if(clientSocket < 0)
-                    throw std::runtime_error("Failed to accept client socket.");
-                if(!mRunning)
+                while(mRunning)
                 {
-                    close(clientSocket);
-                    break;
+                    struct sockaddr clientAddr;
+                    socklen_t clientAddrLen = sizeof(clientAddr);
+                    int clientSocket = accept(mListenerSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
+                    if(clientSocket < 0)
+                        throw std::runtime_error("Failed to accept client socket.");
+                    if(!mRunning)
+                    {
+                        close(clientSocket);
+                        break;
+                    }
+                    startClient(clientSocket);
+                    usleep(1000);
                 }
-                startClient(clientSocket);
-                usleep(1000);
+            }
+            catch(std::runtime_error e)
+            {
+                mLog.errorLine(std::string("Error: ") + e.what());
             }
             close(mListenerSocket);
+            mLog.writeLine("Closed listener.");
             mStopped = true;
         }
 
@@ -127,12 +135,19 @@ namespace blockchain
                 timeout.tv_usec = 0;
                 if(setsockopt(pkg->mSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
                     std::runtime_error("Could not setup socket timeout.");
+
+                bool pingConfirm = false;
     
                 while(mRunning && pkg->mRunning)
                 {
                     DPacket gotPacket = pkg->recvPacket();
                     if(gotPacket.mMessageType == EMT_PING)
                     {
+                        if(!pingConfirm)
+                        {
+                            mLog.writeLine("Confirmed ping from client. Pings are now silent.");
+                            pingConfirm = true;
+                        }
                         pkg->sendPacket(&gotPacket);
                     }
                     else
@@ -141,9 +156,10 @@ namespace blockchain
             }
             catch(std::runtime_error e)
             {
-                //throw std::runtime_error(std::string("Server Node: ") + e.what());
+                mLog.errorLine(std::string("Node Error: ") + e.what());
             }
             close(pkg->mSocket);
+            mLog.writeLine("Closed node.");
             delete pkg;            
         }
     }

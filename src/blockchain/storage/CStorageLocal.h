@@ -3,6 +3,7 @@
 #include "IStorage.h"
 #include "../CBlock.h"
 #include "../CChain.h"
+#include "../CLog.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -18,6 +19,8 @@ namespace blockchain
             const std::string mBasePath = std::string("data/");
             const uint32_t mChunkSize = 2048;
             std::map<std::string, std::basic_string<uint8_t>> mMetaData;
+
+            CLog mLog;
         public:
             CStorageLocal();
             ~CStorageLocal();

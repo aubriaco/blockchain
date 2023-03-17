@@ -1,6 +1,7 @@
 #ifndef __C_CLIENT_INCLUDED__
 #define __C_CLIENT_INCLUDED__
 #include "INet.h"
+#include "../CLog.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -22,6 +23,8 @@ namespace blockchain
             bool mStopped;
             struct sockaddr_in mAddr;
             pthread_t mWorkerThread;
+
+            CLog mLog;
         protected:
             void startWorker();
             static void* static_worker(void* param);

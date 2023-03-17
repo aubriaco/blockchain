@@ -6,7 +6,7 @@
 namespace blockchain
 {
 
-    CBlock::CBlock(CBlock* prevBlock, const uint8_t* hash)
+    CBlock::CBlock(CBlock* prevBlock, const uint8_t* hash) : mLog("Block")
     {
         mPrevBlock = prevBlock;
         if(hash)

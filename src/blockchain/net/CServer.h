@@ -1,6 +1,7 @@
 #ifndef __C_SERVER_INCLUDED__
 #define __C_SERVER_INCLUDED__
 #include "INet.h"
+#include "../CLog.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -23,6 +24,8 @@ namespace blockchain
             bool mRunning;
             bool mStopped;
             pthread_t mWorkerThread;
+
+            CLog mLog;
         protected:
             class CSocketPackage : public INet
             {

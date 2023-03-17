@@ -11,6 +11,7 @@ CChain* gChain;
 
 void interruptCallback(int sig)
 {
+	cout << "\n";
 	gChain->stop();
 }
 

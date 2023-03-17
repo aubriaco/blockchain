@@ -5,6 +5,7 @@
 #include "storage/IStorage.h"
 #include "net/CServer.h"
 #include "net/CClient.h"
+#include "CLog.h"
 #include <vector>
 
 namespace blockchain
@@ -22,6 +23,8 @@ namespace blockchain
         net::CClient* mClient;
         bool mRunning;
         bool mStopped;
+        
+        CLog mLog;
     public:
         CChain(int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE);
         CChain(bool newChain, const std::string& connectToNode = std::string(), int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE);     //

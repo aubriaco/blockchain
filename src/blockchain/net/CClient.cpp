@@ -12,7 +12,7 @@ namespace blockchain
 {
     namespace net
     {
-        CClient::CClient(void* chain, const std::string& host, uint32_t port)
+        CClient::CClient(void* chain, const std::string& host, uint32_t port) : mLog("Client")
         {
             mChain = chain;
             mPort = port;
@@ -40,8 +40,12 @@ namespace blockchain
             if(mSocket < 0)
                 throw std::runtime_error("Could not open socket.");
 
+            mLog.writeLine("Connecting...");
+
             if(connect(mSocket, (struct sockaddr*)&mAddr, sizeof(mAddr)) < 0)
                 throw std::runtime_error("Failed to connect to host.");
+
+            mLog.writeLine("Connected to host!");
 
             startWorker();
         }
@@ -72,6 +76,9 @@ namespace blockchain
                 timeout.tv_usec = 0;
                 if(setsockopt(mSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
                     std::runtime_error("Could not setup socket timeout.");
+
+
+                bool pingConfirm = false;
     
                 while(mRunning)
                 {
@@ -82,6 +89,11 @@ namespace blockchain
 
                     if(gotPacket.mMessageType != EMT_PING)
                         throw std::runtime_error("Failed to get ping back from server.");
+                    else if(!pingConfirm)
+                    {
+                        mLog.writeLine("Confirmed ping from server. Will continue to ping...");
+                        pingConfirm = true;
+                    }
 
                     usleep(5000);
                 }
@@ -89,9 +101,10 @@ namespace blockchain
             }
             catch(std::runtime_error e)
             {
-                throw std::runtime_error(std::string("Client: ") + e.what());
+                mLog.errorLine(std::string("Error: ") + e.what());
             }
             close(mSocket);
+            mLog.writeLine("Closed.");
             mStopped = true;
         }
 

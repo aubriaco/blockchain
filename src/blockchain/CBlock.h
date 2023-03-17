@@ -1,5 +1,6 @@
 #ifndef __C_BLOCK_INCLUDED__
 #define __C_BLOCK_INCLUDED__
+#include "CLog.h"
 #include <string>
 #include <openssl/sha.h>
 
@@ -15,6 +16,8 @@ namespace blockchain
         uint32_t mDataSize;                             // Size of the data
         time_t mCreatedTS;                              // Timestamp of block creation
         uint32_t mNonce;                                // Nonce of the block
+
+        CLog mLog;
     public:
         CBlock(CBlock* prevBlock, const uint8_t* hash = 0);                      // Constructor
         ~CBlock();                                      //

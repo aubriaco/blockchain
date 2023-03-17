@@ -8,7 +8,7 @@ namespace blockchain
 {
     namespace storage
     {
-        CStorageLocal::CStorageLocal()
+        CStorageLocal::CStorageLocal() : mLog("Storage")
         {
             struct stat info;
             if(stat(mBasePath.c_str(), &info) != 0 || !(info.st_mode & S_IFDIR))

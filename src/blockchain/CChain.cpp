@@ -4,8 +4,9 @@
 
 namespace blockchain
 {
-    CChain::CChain(int difficulty, storage::E_STORAGE_TYPE storageType)
+    CChain::CChain(int difficulty, storage::E_STORAGE_TYPE storageType) : mLog("Chain")
     {
+        CLog::open(false);
         mRunning = true;
         mStopped = false;
         mDifficulty = difficulty;
@@ -42,6 +43,7 @@ namespace blockchain
         {
             delete (*it);
         }
+        CLog::close();
         mRunning = false;
     }
 
