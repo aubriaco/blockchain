@@ -35,12 +35,12 @@ namespace blockchain
                 throw std::runtime_error("Could not open listener socket.");
             memset((char *)&mServerAddr, 0, sizeof(mServerAddr));
             mServerAddr.sin_family = AF_INET;
-            mServerAddr.sin_port = htons(mListenPort);
-            mServerAddr.sin_addr.s_addr = INADDR_ANY;
-            if(bind(mListenerSocket, (struct sockaddr*)&mServerAddr, sizeof(mServerAddr)) < 0)
+            mServerAddr.sin_port = htons(mListenPort);      // htons (short) -> net (short)
+            mServerAddr.sin_addr.s_addr = INADDR_ANY;       // listen to any client
+            if(bind(mListenerSocket, (struct sockaddr*)&mServerAddr, sizeof(mServerAddr)) < 0)  // bind function
                 throw std::runtime_error("Could not bind to port.");
 
-            listen(mListenerSocket, mBacklog);
+            listen(mListenerSocket, mBacklog);  // listen 
 
             startWorker();
         }
@@ -96,7 +96,6 @@ namespace blockchain
                         break;
                     }
                     startClient(clientSocket);
-                    usleep(1000);
                 }
             }
             catch(std::runtime_error e)
@@ -157,6 +156,12 @@ namespace blockchain
                         {
                             gotPacket.destroyData();
                             throw std::runtime_error("Expecting EMT_NODE_REGISTER_PORT.");
+                        }
+
+                        if(gotPacket.mDataSize != sizeof(uint32_t))
+                        {
+                            gotPacket.destroyData();
+                            throw std::runtime_error("Expecting data size bigger than 0.");
                         }
 
                         uint32_t clientPort = *((uint32_t*)gotPacket.mData);

@@ -9,13 +9,13 @@ namespace blockchain
         class INet
         {
         public:
-            int mSocket;
-            CPacket recvPacket();
-            void sendPacket(CPacket* packet);
+            int mSocket;    // socket handle
+            CPacket recvPacket();   // receive packet of data
+            void sendPacket(CPacket* packet);   // send packet of data
         protected:
             INet();
         private:
-            const uint32_t mChunkSize = 2048;
+            const uint32_t mChunkSize = 2048;   // chunk data size
 
             uint32_t recvUInt();
             void sendUInt(uint32_t num);
