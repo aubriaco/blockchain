@@ -3,6 +3,8 @@
 #include "CLog.h"
 #include <string>
 #include <openssl/sha.h>
+#include <sys/time.h>
+#include <ctime>
 
 namespace blockchain
 {

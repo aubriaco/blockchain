@@ -3,6 +3,7 @@
 #include <ctime>
 #include <unistd.h>
 #include <signal.h>
+#include <map>
 
 using namespace std;
 using namespace blockchain;
@@ -15,11 +16,62 @@ void interruptCallback(int sig)
 	gChain->stop();
 }
 
+bool tobool(std::string str)
+{
+	for(int n = 0; n < str.size(); n++)
+		str[n] = std::tolower(str[n]);
+	
+	if(str == "true" || str == "t" || str == "1")
+		return true;
+	return false;
+}
+
 int main(int argc, char **argv)
 {
+	if(argc == 0)
+	{
+		cout << "Error: no binary parameter passed by system.\n";
+		return 1;
+	}
+	string binName(argv[0]);
+	if(argc == 1)
+	{
+		cout << "Usage:\n" << binName + " -hYOURHOST -cCONNECTTO -nFALSE\n\n-h\tHOSTNAME\tYour host entry point.\n-c\tHOSTNAME\tConnect to node entrypoint hostname.\n-n\ttrue | false\tIs this a new chain or not.\n\n";
+		return 1;
+	}
+
+	map<string, string> params;
+
+	for(int n = 0; n < argc; n++)
+	{
+		string param(argv[n]);
+		if(param.size() > 2 && param[0] == '-')
+		{
+			string varName(param.substr(1,1));			
+			params[varName] = param.substr(2);
+		}
+	}
+
+	if(params.count("h") == 0)
+	{
+		cout << "You must specify host entrypoint for your node using -h:\nExample: " + binName + " -h127.0.0.1\n\n";
+		return 1;
+	}
+
+	if(params.count("n") == 0)
+		params["n"] = "false";
+
+	bool isNewChain = tobool(params["n"]);
+
+	if(!isNewChain && params.count("c") == 0)
+	{
+		cout << "If this is an existing chain. You must specify which node to connect to using -c:\nExample: " + binName + " -cchain.solusek.com\n\n";
+		return 1;
+	}
+
 	cout << "Start.\n";
 
-	CChain chain("127.0.0.1", false, "127.0.0.1", 1, storage::EST_LOCAL);
+	CChain chain(params["h"], isNewChain, params["c"], 1, storage::EST_LOCAL);
 	gChain = &chain;
 
 	cout << "Chain intialized!\n";
