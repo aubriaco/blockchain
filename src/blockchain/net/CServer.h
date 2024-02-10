@@ -1,3 +1,11 @@
+/*
+ * Copyright 2023-2024 Alessandro Ubriaco. All Rights Reserved.
+ * 
+ * Licensed under the Apache License 2.0 (the "License").
+ * You may not use this file except in the compliance with the License.
+ * You may obtain a copy of the license in the file LICENSE.txt
+ * in the source distribution.
+*/
 #ifndef __C_SERVER_INCLUDED__
 #define __C_SERVER_INCLUDED__
 #include "INet.h"
@@ -57,6 +65,8 @@ namespace blockchain
             void client(CSocketPackage* pkg);
 
             void addNodeToList(const std::string& hostname, uint32_t port);
+
+            void processPacket(CSocketPackage* pkg, CPacket* packet, bool* pingConfirm);
 
         public:
             CServer(void* chain, uint32_t listenPort);

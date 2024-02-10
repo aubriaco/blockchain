@@ -1,3 +1,11 @@
+/*
+ * Copyright 2023-2024 Alessandro Ubriaco. All Rights Reserved.
+ * 
+ * Licensed under the Apache License 2.0 (the "License").
+ * You may not use this file except in the compliance with the License.
+ * You may obtain a copy of the license in the file LICENSE.txt
+ * in the source distribution.
+*/
 #include "blockchain/CChain.h"
 #include <iostream>
 #include <ctime>
@@ -110,40 +118,44 @@ int main(int argc, char **argv)
 
     CBlock* current = chain.getCurrentBlock();
 
-    uint8_t* garbage = new uint8_t[32];
-    for(uint32_t n = 0; n < 32; n++)
-        garbage[n] = clock() % 255;
+    if(isNewChain)
+    {
 
-    cout << "Garbage generated.\n";
-    
-    chain.appendToCurrentBlock(garbage, 32);
-    delete[] garbage;
+        uint8_t* garbage = new uint8_t[32];
+        for(uint32_t n = 0; n < 32; n++)
+            garbage[n] = clock() % 255;
 
-    cout << "Garbage appended to current block.\n";
+        cout << "Garbage generated.\n";
+        
+        chain.appendToCurrentBlock(garbage, 32);
+        delete[] garbage;
 
-    chain.nextBlock();
-    
-    cout << "Next block mined.\n";
+        cout << "Garbage appended to current block.\n";
 
-    cout << "Current Hash: " << chain.getCurrentBlock()->getPrevBlock()->getHashStr() << "\nNonce: " << chain.getCurrentBlock()->getNonce() << "\n";
+        chain.nextBlock();
+        
+        cout << "Next block mined.\n";
 
-    garbage = new uint8_t[32];
-    for(uint32_t n = 0; n < 32; n++)
-        garbage[n] = clock() % 255;
+        cout << "Current Hash: " << chain.getCurrentBlock()->getPrevBlock()->getHashStr() << "\nNonce: " << chain.getCurrentBlock()->getNonce() << "\n";
 
-    cout << "Garbage generated.\n";
-    
-    chain.appendToCurrentBlock(garbage, 32);
-    delete[] garbage;
+        garbage = new uint8_t[32];
+        for(uint32_t n = 0; n < 32; n++)
+            garbage[n] = clock() % 255;
 
-    cout << "Garbage appended to current block.\n";	
+        cout << "Garbage generated.\n";
+        
+        chain.appendToCurrentBlock(garbage, 32);
+        delete[] garbage;
 
-    chain.nextBlock();
-    
-    cout << "Next block mined.\n";
+        cout << "Garbage appended to current block.\n";	
 
-    cout << "Previous Hash: " << chain.getCurrentBlock()->getPrevBlock()->getHashStr() << "\nNonce: " << chain.getCurrentBlock()->getNonce() << "\n";
+        chain.nextBlock();
+        
+        cout << "Next block mined.\n";
 
+        cout << "Previous Hash: " << chain.getCurrentBlock()->getPrevBlock()->getHashStr() << "\nNonce: " << chain.getCurrentBlock()->getNonce() << "\n";
+
+    }
     cout << "Current block count: " << chain.getBlockCount() << "\n";
 
     cout << "\n" << "## BLOCK LIST (Descending)" << "\n";

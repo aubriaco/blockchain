@@ -1,4 +1,5 @@
 #include "CChain.h"
+#include "net/CPacket.h"
 #include "storage/storage.h"
 #include <stdexcept>
 
@@ -66,7 +67,16 @@ namespace blockchain
         CBlock* block = new CBlock(mCurrentBlock);
         mChain.push_back(block);
         block->mine(mDifficulty);
+        
         mCurrentBlock = block;
+    }
+
+    void CChain::distributeBlock(CBlock* block)
+    {
+        for(std::vector<net::CClient*>::iterator it = mClients.begin(); it != mClients.end(); ++it)
+        {
+            (*it)->sendBlock(block);
+        }
     }
 
     CBlock* CChain::getCurrentBlock()

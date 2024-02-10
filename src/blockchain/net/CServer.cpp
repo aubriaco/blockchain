@@ -1,3 +1,11 @@
+/*
+ * Copyright 2023-2024 Alessandro Ubriaco. All Rights Reserved.
+ * 
+ * Licensed under the Apache License 2.0 (the "License").
+ * You may not use this file except in the compliance with the License.
+ * You may obtain a copy of the license in the file LICENSE.txt
+ * in the source distribution.
+*/
 #include "CServer.h"
 #include "../CChain.h"
 #include <stdexcept>
@@ -183,19 +191,15 @@ namespace blockchain
                             throw std::runtime_error("Client is not approved for anything except EMT_NODE_REGISTER.");
                         }
 
-                        if(gotPacket.mMessageType == EMT_PING)
+
+                        try
                         {
-                            if(!pingConfirm)
-                            {
-                                mLog.writeLine("Confirmed ping from client. Pings are now silent.");
-                                pingConfirm = true;
-                            }
-                            pkg->sendPacket(&gotPacket);
+                            processPacket(pkg, &gotPacket, &pingConfirm);
                         }
-                        else
+                        catch(std::runtime_error ex)
                         {
                             gotPacket.destroyData();
-                            throw std::runtime_error(std::string("Unknown packet received: ") + std::to_string(gotPacket.mMessageType));
+                            throw std::runtime_error(std::string("Runtime error: ") + ex.what());
                         }
                     }
                     gotPacket.destroyData();
@@ -209,6 +213,27 @@ namespace blockchain
             close(pkg->mSocket);
             mLog.writeLine("Closed node.");
             delete pkg;            
+        }
+
+        void CServer::processPacket(CSocketPackage* pkg, CPacket *packet, bool* pingConfirm)
+        {
+            if (packet->mMessageType == EMT_PING)
+            {
+                if (!*pingConfirm)
+                {
+                    mLog.writeLine("Confirmed ping from client. Pings are now silent.");
+                    *pingConfirm = true;
+                }
+                pkg->sendPacket(packet);
+            }
+            else if(packet->mMessageType == EMT_WRITE_BLOCK)
+            {
+                
+            }
+            else
+            {
+                throw std::runtime_error(std::string("Unknown packet received: ") + std::to_string(packet->mMessageType));
+            }
         }
 
         void CServer::addNodeToList(const std::string& hostname, uint32_t port)

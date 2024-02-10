@@ -1,3 +1,11 @@
+/*
+ * Copyright 2023-2024 Alessandro Ubriaco. All Rights Reserved.
+ * 
+ * Licensed under the Apache License 2.0 (the "License").
+ * You may not use this file except in the compliance with the License.
+ * You may obtain a copy of the license in the file LICENSE.txt
+ * in the source distribution.
+*/
 #ifndef __C_CHAIN_INCLUDED__
 #define __C_CHAIN_INCLUDED__
 #include "CBlock.h"
@@ -32,6 +40,7 @@ namespace blockchain
         ~CChain();                                                                          //
         void appendToCurrentBlock(uint8_t* data, uint32_t size); 
         void nextBlock(bool save = true);       // Continue to next block
+        void distributeBlock(CBlock* block);   // Distribute written block to other nodes
         CBlock* getCurrentBlock(); // Gets a pointer to the current block
         void load();                                                                          // load the chain
         size_t getBlockCount();                                                           // return the number of blocks
