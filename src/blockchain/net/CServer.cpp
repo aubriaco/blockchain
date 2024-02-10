@@ -38,7 +38,7 @@ namespace blockchain
             mServerAddr.sin_port = htons(mListenPort);      // htons (short) -> net (short)
             mServerAddr.sin_addr.s_addr = INADDR_ANY;       // listen to any client
             if(bind(mListenerSocket, (struct sockaddr*)&mServerAddr, sizeof(mServerAddr)) < 0)  // bind function
-                throw std::runtime_error("Could not bind to port.");
+                throw std::runtime_error(std::string("Could not bind to port.") + std::to_string(mListenPort));
 
             listen(mListenerSocket, mBacklog);  // listen 
 

@@ -4,7 +4,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
-
+#include <iostream>
 
 #define PCHAIN ((CChain*)mChain)
 
@@ -24,6 +24,7 @@ namespace blockchain
             memset((char *)&mAddr, 0, sizeof(mAddr));
             mAddr.sin_family = AF_INET;
             mAddr.sin_port = htons(port);
+            std::cout << host << "\n";
             if(inet_pton(AF_INET, host.c_str(), &mAddr.sin_addr) <= 0)
                 throw std::runtime_error("Invalid host to connect to.");
         }
