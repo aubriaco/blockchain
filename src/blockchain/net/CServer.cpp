@@ -205,6 +205,7 @@ namespace blockchain
             {
                 mLog.errorLine(std::string("Node Error: ") + e.what());
             }
+            shutdown(pkg->mSocket, SHUT_RDWR);
             close(pkg->mSocket);
             mLog.writeLine("Closed node.");
             delete pkg;            

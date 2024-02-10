@@ -130,6 +130,7 @@ namespace blockchain
             {
                 mLog.errorLine(std::string("Error: ") + e.what());
             }
+            shutdown(mSocket, SHUT_RDWR);
             close(mSocket);
             mLog.writeLine("Closed.");
             mStopped = true;
