@@ -83,10 +83,18 @@ int main(int argc, char **argv)
         connectTo = params["c"].substr(0, pos);
         connectPort = (uint32_t)std::stoi(params["c"].substr(pos+1));
     }
+
+    storage::E_STORAGE_TYPE storageType(storage::EST_LOCAL);
+
+    if(params.count("s") != 0)
+    {
+        if(params["s"] == "none")
+            storageType = storage::EST_NONE;
+    }
     
     cout << "Start.\n";
 
-    CChain chain(host, isNewChain, connectTo, 1, storage::EST_LOCAL, hostPort, connectPort);
+    CChain chain(host, isNewChain, connectTo, 1, storageType, hostPort, connectPort);
     gChain = &chain;
 
     cout << "Chain intialized!\n";
