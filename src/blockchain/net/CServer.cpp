@@ -227,9 +227,10 @@ namespace blockchain
                 }
             }
             mNodeList.push_back(CNodeInfo(hostname, port));
-            mLog.writeLine("Added new node to list: " + hostname);
 
-            if(hostname != PCHAIN->getHostName())   // avoid connecting eternally to itself
+            mLog.writeLine("Added new node to list: " + hostname + ":" + std::to_string(port));
+            
+            if(hostname != PCHAIN->getHostName() || port != PCHAIN->getNetPort())   // avoid connecting eternally to itself
                 PCHAIN->connectNewClient(hostname, port);
         }
     }

@@ -131,6 +131,7 @@ namespace blockchain
     {
         net::CClient* client = new net::CClient(this, hostname, port);
         mClients.push_back(client);
+        mLog.writeLine("Connect Client: " + hostname + ":" + std::to_string(port));
         client->start();
     }
 }
