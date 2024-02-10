@@ -21,6 +21,7 @@ namespace blockchain
             EMT_ERR,
             EMT_NODE_REGISTER,
             EMT_NODE_REGISTER_PORT,
+            EMT_INIT_CHAIN,
             EMT_WRITE_BLOCK,
             EMT_COUNT
         };

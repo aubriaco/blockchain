@@ -36,6 +36,7 @@ bool tobool(std::string str)
 
 int main(int argc, char **argv)
 {
+    signal(SIGPIPE, SIG_IGN);
     if(argc == 0)
     {
         cout << "Error: no binary parameter passed by system.\n";

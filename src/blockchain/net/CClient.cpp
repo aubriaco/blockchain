@@ -55,7 +55,7 @@ namespace blockchain
             if(connect(mSocket, (struct sockaddr*)&mAddr, sizeof(mAddr)) < 0)
                 throw std::runtime_error("Failed to connect to host.");
 
-            mLog.writeLine("Connected to host!");
+            mLog.writeLine("Connected to host:  "  + mHost +  ":" + std::to_string(mPort));
 
             startWorker();
         }
@@ -111,6 +111,8 @@ namespace blockchain
                 if(gotPacket.mMessageType != EMT_ACK)
                     throw std::runtime_error("Server has rejected client port.");
 
+                bool initialized = false;
+
                 while(mRunning)
                 {
                     writePacket.mMessageType = EMT_PING;
@@ -118,6 +120,12 @@ namespace blockchain
                     gotPacket = recvPacket();
                     processPacket(&gotPacket, writePacket.mMessageType);                    
                     gotPacket.destroyData();
+
+                    if(!initialized)
+                    {
+                        init();
+                        initialized = true;
+                    }
 
                     while(mQueue.size() > 0)
                     {
@@ -144,6 +152,46 @@ namespace blockchain
             close(mSocket);
             mLog.writeLine("Closed.");
             mStopped = true;
+        }
+
+        void CClient::init()
+        {
+            CPacket writePacket;
+            writePacket.mMessageType = EMT_INIT_CHAIN;
+            memcpy(writePacket.mHash, PCHAIN->getCurrentBlock()->getHash(), SHA256_DIGEST_LENGTH);
+            sendPacket(&writePacket);
+            CPacket gotPacket = recvPacket();
+            if(gotPacket.mMessageType == EMT_WRITE_BLOCK)
+            {
+                mLog.writeLine("Copying chain over from node.");
+                PCHAIN->getChainPtr()->clear();
+                while(gotPacket.mMessageType == EMT_WRITE_BLOCK)
+                {
+                    CBlock* block = new CBlock(0, gotPacket.mHash);
+                    block->setPrevHash(gotPacket.mPrevHash);
+                    block->setCreatedTS(gotPacket.mCreatedTS);
+                    block->setNonce(gotPacket.mNonce);
+                    uint8_t* data = new uint8_t[gotPacket.mDataSize];
+                    memcpy(data, gotPacket.mData, gotPacket.mDataSize);
+                    block->setAllocatedData(data, gotPacket.mDataSize);
+                    mLog.writeLine("Copied block: " + block->getHashStr());
+                    gotPacket.destroyData();
+                    gotPacket = recvPacket();
+                }
+                if(gotPacket.mMessageType == EMT_ACK)
+                {
+                    mLog.writeLine("Sync complete.");
+                }
+                else
+                {
+                    mLog.writeLine("Sync error.");
+                    throw std::runtime_error("Sync error.");
+                }
+            }
+            else if(gotPacket.mMessageType == EMT_ACK)
+            {
+                mLog.writeLine("Chain is initialized.");
+            }
         }
 
         void CClient::processPacket(CPacket *packet, EMessageType responseTo)

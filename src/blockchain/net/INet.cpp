@@ -9,6 +9,7 @@
 #include "INet.h"
 #include <stdexcept>
 #include <netinet/in.h>
+#include <string.h>
 
 namespace blockchain
 {
@@ -26,6 +27,16 @@ namespace blockchain
             CPacket packet;
             packet.mVersion = recvUInt();
             packet.mMessageType = (EMessageType)recvUInt();
+            packet.mNonce = recvUInt();
+            packet.mCreatedTS = (time_t)recvUInt();
+            // Hash
+            uint8_t* hashData = recvDataAlloc(SHA256_DIGEST_LENGTH);
+            memcpy(packet.mHash, hashData, SHA256_DIGEST_LENGTH);
+            delete[] hashData;
+            // Prev hash
+            hashData = recvDataAlloc(SHA256_DIGEST_LENGTH);
+            memcpy(packet.mPrevHash, hashData, SHA256_DIGEST_LENGTH);
+            delete[] hashData;
             packet.mDataSize = recvUInt();
             if(packet.mDataSize != 0)
             {
@@ -41,6 +52,10 @@ namespace blockchain
                 throw std::runtime_error("INet: Socket is null.");
             sendUInt(packet->mVersion);
             sendUInt(packet->mMessageType);
+            sendUInt(packet->mNonce);
+            sendUInt(packet->mCreatedTS);
+            sendData(packet->mHash, SHA256_DIGEST_LENGTH);
+            sendData(packet->mPrevHash, SHA256_DIGEST_LENGTH);
             sendUInt(packet->mDataSize);
             if(packet->mDataSize != 0 && packet->mData)
                 sendData(packet->mData, packet->mDataSize);

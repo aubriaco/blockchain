@@ -45,6 +45,7 @@ namespace blockchain
             static void* static_worker(void* param);
             void worker();
             void processPacket(CPacket* packet, EMessageType responseTo);
+            void init();
         public:
             CClient(void* chain, const std::string& host, uint32_t port);
             ~CClient();

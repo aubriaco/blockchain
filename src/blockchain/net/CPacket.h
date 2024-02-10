@@ -11,6 +11,8 @@
 #include "EMessageType.h"
 #include <stdint.h>
 #include <openssl/sha.h>
+#include <ctime>
+#include <string.h>
 
 namespace blockchain
 {
@@ -26,6 +28,8 @@ namespace blockchain
             bool mTrackDataAlloc;
             uint8_t mHash[SHA256_DIGEST_LENGTH];
             uint8_t mPrevHash[SHA256_DIGEST_LENGTH];
+            time_t mCreatedTS;
+            uint32_t mNonce;
 
             CPacket()
             {
@@ -52,6 +56,10 @@ namespace blockchain
                 destroyData();
                 mVersion = 1;
                 mMessageType = EMT_NULL;
+                mNonce = 0;
+                mCreatedTS = 0;
+                memset(mHash, 0, SHA256_DIGEST_LENGTH);
+                memset(mPrevHash, 0, SHA256_DIGEST_LENGTH);
                 mDataSize = 0;
                 mData = 0;
             }

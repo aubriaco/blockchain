@@ -92,6 +92,11 @@ namespace blockchain
             nextBlock(false);
     }
 
+    std::vector<CBlock*>* CChain::getChainPtr()
+    {
+        return &mChain;
+    }
+
     size_t CChain::getBlockCount()
     {
         return mChain.size();

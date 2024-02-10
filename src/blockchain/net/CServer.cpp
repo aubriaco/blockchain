@@ -226,6 +226,36 @@ namespace blockchain
                 }
                 pkg->sendPacket(packet);
             }
+            else if(packet->mMessageType == EMT_INIT_CHAIN)
+            {
+                if(memcmp(packet->mHash, PCHAIN->getCurrentBlock()->getHash(), SHA256_DIGEST_LENGTH) == 0)
+                {
+                    mLog.writeLine("Both chains have same hash, no sync required.");
+                    CPacket respPacket;
+                    respPacket.mMessageType = EMT_ACK;
+                    pkg->sendPacket(&respPacket);
+                }
+                else
+                {
+                    CBlock* block = PCHAIN->getCurrentBlock();
+                    CPacket respPacket;
+                    do
+                    {
+                        respPacket.mMessageType = EMT_WRITE_BLOCK;
+                        respPacket.mData = block->getData();
+                        respPacket.mDataSize = block->getDataSize();
+                        respPacket.mCreatedTS = block->getCreatedTS();
+                        respPacket.mNonce = block->getNonce();
+                        memcpy(respPacket.mHash, block->getHash(), SHA256_DIGEST_LENGTH);
+                        memcpy(respPacket.mPrevHash, block->getPrevHash(), SHA256_DIGEST_LENGTH);
+                        pkg->sendPacket(&respPacket);
+                    } while (block = block->getPrevBlock());
+                    respPacket.reset();
+                    respPacket.mMessageType = EMT_ACK;
+                    pkg->sendPacket(&respPacket);
+                }
+                
+            }
             else if(packet->mMessageType == EMT_WRITE_BLOCK)
             {
                 
@@ -238,9 +268,10 @@ namespace blockchain
 
         void CServer::addNodeToList(const std::string& hostname, uint32_t port)
         {
+            
             for(std::vector<CNodeInfo>::iterator it = mNodeList.begin(); it != mNodeList.end(); ++it)
             {
-                if((*it).mHostName == hostname)
+                if((*it).mHostName == hostname && (*it).mPort == port)
                 {                    
                     (*it).seen();
                     mLog.writeLine("Found node in list: " + hostname);
@@ -255,6 +286,8 @@ namespace blockchain
             mNodeList.push_back(CNodeInfo(hostname, port));
 
             mLog.writeLine("Added new node to list: " + hostname + ":" + std::to_string(port));
+
+
             
             if(hostname != PCHAIN->getHostName() || port != PCHAIN->getNetPort())   // avoid connecting eternally to itself
                 PCHAIN->connectNewClient(hostname, port);
