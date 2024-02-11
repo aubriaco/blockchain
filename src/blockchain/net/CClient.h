@@ -52,6 +52,8 @@ namespace blockchain
             void start();
             void stop();
             void sendBlock(CBlock* block);
+            std::string getHost() { return mHost; }
+            uint32_t getPort() { return mPort; }
         };
     }
 }

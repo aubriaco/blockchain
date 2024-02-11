@@ -56,6 +56,8 @@ namespace blockchain
                 ~CSocketPackage() {}
             };
 
+            std::vector<CSocketPackage*> mSocketPackages;
+
             void startWorker();
             static void* static_worker(void* param);
             void worker();

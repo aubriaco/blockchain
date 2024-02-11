@@ -121,7 +121,6 @@ int main(int argc, char **argv)
 
     if(isNewChain)
     {
-
         uint8_t* garbage = new uint8_t[32];
         for(uint32_t n = 0; n < 32; n++)
             garbage[n] = clock() % 255;
@@ -162,14 +161,14 @@ int main(int argc, char **argv)
     cout << "\n" << "## BLOCK LIST (Descending)" << "\n";
 
     CBlock* cur = chain.getCurrentBlock();
-    while(cur = cur->getPrevBlock())
+    do
     {
         time_t ts = cur->getCreatedTS();
         string tstr(ctime(&ts));
         tstr.resize(tstr.size()-1);
 
         cout << "Block " << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
-    }
+    } while(cur = cur->getPrevBlock());
 
     // Interrupt Signal
     struct sigaction sigIntHandler;

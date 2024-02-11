@@ -11,6 +11,8 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <algorithm>
+#include <signal.h>
 
 #define PCHAIN ((CChain*)mChain)
 
@@ -41,6 +43,15 @@ namespace blockchain
             mSocket = mListenerSocket = socket(AF_INET, SOCK_STREAM, 0);
             if(mListenerSocket < 0)
                 throw std::runtime_error("Could not open listener socket.");
+
+            struct timeval timeout;
+            timeout.tv_sec = 10;
+            timeout.tv_usec = 0;
+            if(setsockopt(mListenerSocket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeval)) < 0)
+                std::runtime_error("Could not setup socket send timeout.");
+            if(setsockopt(mListenerSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
+                std::runtime_error("Could not setup socket receive timeout.");
+
             memset((char *)&mServerAddr, 0, sizeof(mServerAddr));
             mServerAddr.sin_family = AF_INET;
             mServerAddr.sin_port = htons(mListenPort);      // htons (short) -> net (short)
@@ -66,8 +77,6 @@ namespace blockchain
             if(connect(stopSocket, (struct sockaddr*)&addr, sizeof(addr)) >= 0)
                 close(stopSocket);
 
-            while(!mStopped)
-                usleep(10);
         }
 
         void CServer::startWorker()
@@ -97,7 +106,10 @@ namespace blockchain
                     socklen_t clientAddrLen = sizeof(clientAddr);
                     int clientSocket = accept(mListenerSocket, (struct sockaddr*)&clientAddr, &clientAddrLen);
                     if(clientSocket < 0)
-                        throw std::runtime_error("Failed to accept client socket.");
+                    {
+                        mLog.writeLine("Failed to accept client socket. Continue...");
+                        continue;
+                    }
                     if(!mRunning)
                     {
                         close(clientSocket);
@@ -118,6 +130,7 @@ namespace blockchain
         void CServer::startClient(int socket)
         {
             CSocketPackage* pkg = new CSocketPackage(this, socket);
+            mSocketPackages.push_back(pkg);
             pthread_attr_t tattr;
             pthread_attr_init(&tattr);
             pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
@@ -140,8 +153,10 @@ namespace blockchain
                 struct timeval timeout;
                 timeout.tv_sec = 10;
                 timeout.tv_usec = 0;
+                if(setsockopt(pkg->mSocket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeval)) < 0)
+                    std::runtime_error("Could not setup socket send timeout.");
                 if(setsockopt(pkg->mSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
-                    std::runtime_error("Could not setup socket timeout.");
+                    std::runtime_error("Could not setup socket receive timeout.");
 
                 bool clientApproved = false;
                 bool pingConfirm = false;
@@ -212,7 +227,11 @@ namespace blockchain
             shutdown(pkg->mSocket, SHUT_RDWR);
             close(pkg->mSocket);
             mLog.writeLine("Closed node.");
-            delete pkg;            
+            std::vector<CSocketPackage*>::iterator f = std::find(mSocketPackages.begin(), mSocketPackages.end(), pkg);
+            if(f != mSocketPackages.end())
+                mSocketPackages.erase(f);
+            delete pkg;
+            mLog.writeLine("There are currently " + std::to_string(mSocketPackages.size()) + " active nodes.");
         }
 
         void CServer::processPacket(CSocketPackage* pkg, CPacket *packet, bool* pingConfirm)
@@ -268,7 +287,15 @@ namespace blockchain
 
         void CServer::addNodeToList(const std::string& hostname, uint32_t port)
         {
-            
+            for(std::vector<CClient*>::iterator it = PCHAIN->getClientsPtr()->begin(); it != PCHAIN->getClientsPtr()->end(); ++it)
+            {
+                if((*it)->getHost() == hostname && (*it)->getPort() == port)
+                {
+                    mLog.writeLine("Already connected to this node (avoiding double-connect): " + hostname);
+                    return;
+                }
+            }
+
             for(std::vector<CNodeInfo>::iterator it = mNodeList.begin(); it != mNodeList.end(); ++it)
             {
                 if((*it).mHostName == hostname && (*it).mPort == port)

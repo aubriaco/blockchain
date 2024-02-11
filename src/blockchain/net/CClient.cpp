@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <iostream>
+#include <signal.h>
+#include <algorithm>
 
 #define PCHAIN ((CChain*)mChain)
 
@@ -84,6 +86,8 @@ namespace blockchain
                 struct timeval timeout;
                 timeout.tv_sec = 10;
                 timeout.tv_usec = 0;
+                if(setsockopt(mSocket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeval)) < 0)
+                    std::runtime_error("Could not setup socket send timeout.");
                 if(setsockopt(mSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
                     std::runtime_error("Could not setup socket timeout.");
                 
@@ -152,6 +156,9 @@ namespace blockchain
             close(mSocket);
             mLog.writeLine("Closed.");
             mStopped = true;
+            std::vector<CClient*>::iterator f = std::find(PCHAIN->getClientsPtr()->begin(), PCHAIN->getClientsPtr()->end(), this);
+            if(f != PCHAIN->getClientsPtr()->end())
+                PCHAIN->getClientsPtr()->erase(f);
         }
 
         void CClient::init()
@@ -174,7 +181,7 @@ namespace blockchain
                     uint8_t* data = new uint8_t[gotPacket.mDataSize];
                     memcpy(data, gotPacket.mData, gotPacket.mDataSize);
                     block->setAllocatedData(data, gotPacket.mDataSize);
-                    mLog.writeLine("Copied block: " + block->getHashStr());
+                    mLog.writeLine("Copied block: " + block->getHashStr() + " Size: " + std::to_string(block->getDataSize()));
                     gotPacket.destroyData();
                     gotPacket = recvPacket();
                 }
@@ -218,8 +225,6 @@ namespace blockchain
         void CClient::stop()
         {
             mRunning = false;
-            while(!mStopped)
-                usleep(10);
         }
 
         void CClient::sendBlock(CBlock* block)

@@ -149,4 +149,9 @@ namespace blockchain
         mLog.writeLine("Connect Client: " + hostname + ":" + std::to_string(port));
         client->start();
     }
+
+    std::vector<net::CClient*>* CChain::getClientsPtr()
+    {
+        return &mClients;
+    }
 }
