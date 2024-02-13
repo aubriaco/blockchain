@@ -35,6 +35,7 @@ namespace blockchain
             pthread_t mWorkerThread;
             bool mPingConfirm;
             bool mChild;
+            bool mReady;
             CLog mLog;
 
             std::string mHost;
@@ -55,6 +56,7 @@ namespace blockchain
             std::string getHost() { return mHost; }
             uint32_t getPort() { return mPort; }
             bool isStopped() { return mStopped; }
+            bool isReady() { return mReady; }
         };
     }
 }

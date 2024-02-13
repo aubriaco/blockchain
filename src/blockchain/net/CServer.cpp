@@ -66,18 +66,19 @@ namespace blockchain
 
         void CServer::stop()
         {
-            mRunning = false;
+            if(mRunning)
+            {
+                mRunning = false;
 
-            int stopSocket = socket(AF_INET, SOCK_STREAM, 0);
-            struct sockaddr_in addr;
-            memset((char *)&addr, 0, sizeof(addr));
-            addr.sin_family = AF_INET;
-            addr.sin_port = htons(mListenPort);
-            inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
-            if (connect(stopSocket, (struct sockaddr *)&addr, sizeof(addr)) >= 0)
-                close(stopSocket);
-
-            
+                int stopSocket = socket(AF_INET, SOCK_STREAM, 0);
+                struct sockaddr_in addr;
+                memset((char *)&addr, 0, sizeof(addr));
+                addr.sin_family = AF_INET;
+                addr.sin_port = htons(mListenPort);
+                inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+                if (connect(stopSocket, (struct sockaddr *)&addr, sizeof(addr)) >= 0)
+                    close(stopSocket);
+            }   
         }
 
         void CServer::startWorker()

@@ -32,7 +32,7 @@ namespace blockchain
         std::vector<net::CClient*> mClients;
         bool mRunning;
         bool mStopped;
-        
+        bool mReady;
         CLog mLog;
     public:
         CChain(const std::string& hostname, int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE, uint32_t hostPort = 7698);
@@ -42,6 +42,7 @@ namespace blockchain
         void nextBlock(bool save = true);       // Continue to next block
         void distributeBlock(CBlock* block);   // Distribute written block to other nodes
         CBlock* getCurrentBlock(); // Gets a pointer to the current block
+        CBlock* getGenesisBlock();
         void load();                                                                          // load the chain
         std::vector<CBlock*>* getChainPtr();
         size_t getBlockCount();                                                           // return the number of blocks
@@ -50,8 +51,12 @@ namespace blockchain
         bool isRunning();
         std::string getHostName();
         uint32_t getNetPort();
-        void connectNewClient(const std::string& hostname, uint32_t port, bool child = false);
+        net::CClient* connectNewClient(const std::string& hostname, uint32_t port, bool child = false);
         std::vector<net::CClient*>* getClientsPtr();
+        bool isReady();
+        void insertBlock(CBlock* block);
+        void pushBlock(CBlock* block);
+        void clear();
     };
 
 }

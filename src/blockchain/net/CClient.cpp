@@ -29,6 +29,7 @@ namespace blockchain
             mPort = port;
             mChild = child;
             mSocket = 0;
+            mReady = false;
             mRunning = false;
             mStopped = false;
             mWorkerThread = 0;
@@ -131,6 +132,8 @@ namespace blockchain
                         init();
                         initialized = true;
                     }
+                    if(!mReady)
+                        mReady = true;
 
                     while (mQueue.size() > 0)
                     {
@@ -170,12 +173,13 @@ namespace blockchain
             CPacket gotPacket = recvPacket();
             if (gotPacket.mMessageType == EMT_CHAIN_INFO)
             {
+                PCHAIN->clear();
                 gotPacket.destroyData();
                 gotPacket = recvPacket();
                 if (gotPacket.mMessageType == EMT_WRITE_BLOCK)
                 {
                     mLog.writeLine("Copying chain over from node.");
-                    PCHAIN->getChainPtr()->clear();
+                    CBlock* nextBlock = 0;
                     while (gotPacket.mMessageType == EMT_WRITE_BLOCK)
                     {
                         CBlock *block = new CBlock(0, gotPacket.mHash);
@@ -185,7 +189,14 @@ namespace blockchain
                         uint8_t *data = new uint8_t[gotPacket.mDataSize];
                         memcpy(data, gotPacket.mData, gotPacket.mDataSize);
                         block->setAllocatedData(data, gotPacket.mDataSize);
-                        PCHAIN->getChainPtr()->push_back(block);
+
+                        if(nextBlock)
+                            nextBlock->setPrevBlock(block);
+
+                        PCHAIN->insertBlock(block);
+
+                        nextBlock = block;
+
                         mLog.writeLine("Copied block: " + block->getHashStr() + " Size: " + std::to_string(block->getDataSize()));
                         gotPacket.destroyData();
                         gotPacket = recvPacket();

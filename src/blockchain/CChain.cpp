@@ -22,6 +22,7 @@ namespace blockchain
         mCurrentBlock = block;
         load();
         mServer->start();
+        mReady = true;
     }
 
     CChain::CChain(const std::string& hostname, bool newChain, const std::string& connectToNode, int difficulty, storage::E_STORAGE_TYPE storageType, uint32_t hostPort, uint32_t connectPort) : CChain(hostname, difficulty, storageType, hostPort)
@@ -30,7 +31,11 @@ namespace blockchain
         {
             if(connectToNode.empty())
                 throw std::runtime_error("When not creating a new chain, you must specify 'connectToNode'.");
-            connectNewClient(connectToNode, connectPort);
+            net::CClient* client = connectNewClient(connectToNode, connectPort);
+            while(!client->isReady())
+                usleep(1);
+            mReady = true;
+            mLog.writeLine("Chain ready!");
         }
     }
 
@@ -86,6 +91,13 @@ namespace blockchain
         return mCurrentBlock;
     }
 
+    CBlock* CChain::getGenesisBlock()
+    {
+        if(mChain.empty())
+            return 0;
+        return mChain[0];
+    }
+
     void CChain::load()
     {
         mStorage->loadChain(&mChain);
@@ -118,6 +130,7 @@ namespace blockchain
     void CChain::stop()
     {
         mRunning = false;
+        /*
         if(mClients.size() != 0)
         {
             for(std::vector<net::CClient*>::iterator it = mClients.begin(); it != mClients.end(); ++it)
@@ -129,6 +142,7 @@ namespace blockchain
                 mLog.writeLine("Stopped.");
             }
         }
+        */
         mServer->stop();
         mStopped = true;
     }
@@ -148,16 +162,49 @@ namespace blockchain
         return mNetPort;
     }
 
-    void CChain::connectNewClient(const std::string& hostname, uint32_t port, bool child)
+    net::CClient* CChain::connectNewClient(const std::string& hostname, uint32_t port, bool child)
     {
         net::CClient* client = new net::CClient(this, hostname, port, child);
         mClients.push_back(client);
         mLog.writeLine("Connect Client: " + hostname + ":" + std::to_string(port));
         client->start();
+        return client;
     }
 
     std::vector<net::CClient*>* CChain::getClientsPtr()
     {
         return &mClients;
+    }
+
+    bool CChain::isReady()
+    {
+        return mReady;
+    }
+
+    void CChain::insertBlock(CBlock* block)
+    {
+        if(mChain.empty())
+            mCurrentBlock = block;
+        mChain.insert(mChain.begin(), block);
+    }
+
+    void CChain::pushBlock(CBlock* block)
+    {
+        if(!mChain.empty())
+        {
+            block->setPrevBlock(mCurrentBlock);
+            block->setPrevHash(mCurrentBlock->getPrevHash());
+        }
+        mChain.push_back(block);
+        mCurrentBlock = block;
+    }
+
+    void CChain::clear()
+    {
+        for(std::vector<CBlock*>::iterator it = mChain.begin(); it != mChain.end(); ++it)
+        {
+            delete (*it);
+        }
+        mChain.clear();
     }
 }
