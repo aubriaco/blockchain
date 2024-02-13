@@ -23,6 +23,8 @@ namespace blockchain
             EMT_NODE_REGISTER_PORT,
             EMT_INIT_CHAIN,
             EMT_WRITE_BLOCK,
+            EMT_CHAIN_NEW,
+            EMT_CHAIN_INFO,
             EMT_COUNT
         };
     }

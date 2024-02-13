@@ -34,7 +34,7 @@ namespace blockchain
             struct sockaddr_in mAddr;
             pthread_t mWorkerThread;
             bool mPingConfirm;
-
+            bool mChild;
             CLog mLog;
 
             std::string mHost;
@@ -47,13 +47,14 @@ namespace blockchain
             void processPacket(CPacket* packet, EMessageType responseTo);
             void init();
         public:
-            CClient(void* chain, const std::string& host, uint32_t port);
+            CClient(void* chain, const std::string& host, uint32_t port, bool child);
             ~CClient();
             void start();
             void stop();
             void sendBlock(CBlock* block);
             std::string getHost() { return mHost; }
             uint32_t getPort() { return mPort; }
+            bool isStopped() { return mStopped; }
         };
     }
 }

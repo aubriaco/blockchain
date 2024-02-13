@@ -2,6 +2,7 @@
 #include "net/CPacket.h"
 #include "storage/storage.h"
 #include <stdexcept>
+#include <unistd.h>
 
 namespace blockchain
 {
@@ -52,6 +53,7 @@ namespace blockchain
         mChain.clear();
         CLog::close();
         mRunning = false;
+        mLog.writeLine("Cleanup completed.");
     }
 
     void CChain::appendToCurrentBlock(uint8_t* data, uint32_t size)
@@ -121,6 +123,10 @@ namespace blockchain
             for(std::vector<net::CClient*>::iterator it = mClients.begin(); it != mClients.end(); ++it)
             {
                 (*it)->stop();
+                mLog.writeLine("Waiting for client to stop...");
+                while(!(*it)->isStopped())
+                    sleep(1);
+                mLog.writeLine("Stopped.");
             }
         }
         mServer->stop();
@@ -142,9 +148,9 @@ namespace blockchain
         return mNetPort;
     }
 
-    void CChain::connectNewClient(const std::string& hostname, uint32_t port)
+    void CChain::connectNewClient(const std::string& hostname, uint32_t port, bool child)
     {
-        net::CClient* client = new net::CClient(this, hostname, port);
+        net::CClient* client = new net::CClient(this, hostname, port, child);
         mClients.push_back(client);
         mLog.writeLine("Connect Client: " + hostname + ":" + std::to_string(port));
         client->start();

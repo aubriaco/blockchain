@@ -50,7 +50,7 @@ namespace blockchain
         bool isRunning();
         std::string getHostName();
         uint32_t getNetPort();
-        void connectNewClient(const std::string& hostname, uint32_t port);
+        void connectNewClient(const std::string& hostname, uint32_t port, bool child = false);
         std::vector<net::CClient*>* getClientsPtr();
     };
 
