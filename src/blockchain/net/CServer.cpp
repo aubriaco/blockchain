@@ -294,24 +294,27 @@ namespace blockchain
             }
             else if (packet->mMessageType == EMT_WRITE_BLOCK)
             {
-                mLog.writeLine("Received write block packet.");
-                CBlock* block = new CBlock(PCHAIN->getCurrentBlock(), packet->mHash);                    
-                if(memcmp(packet->mPrevHash,PCHAIN->getCurrentBlock()->getHash(),SHA256_DIGEST_LENGTH) != 0)
+                if(PCHAIN->hasHash(packet->mHash, 0))
                 {
-                    uint8_t* data = new uint8_t[packet->mDataSize];
-                    memcpy(data, packet->mData, packet->mDataSize);
-                    block->setAllocatedData(data, packet->mDataSize);
-                    PCHAIN->pushBlock(block);
+                    mLog.writeLine("Block has been already mined.");
+                    CPacket respPacket;
+                    respPacket.mMessageType = EMT_ERR;
+                    pkg->sendPacket(&respPacket);
+                }
+                else if(memcmp(packet->mPrevHash,PCHAIN->getCurrentBlock()->getHash(),SHA256_DIGEST_LENGTH) != 0)
+                {
+                    mLog.writeLine("Data size: " + std::to_string(packet->mDataSize));
+                    PCHAIN->appendToCurrentBlock(packet->mData, packet->mDataSize);
+                    PCHAIN->nextBlock();
                     packet->destroyData();
                     CPacket respPacket;
                     respPacket.mMessageType = EMT_ACK;
                     pkg->sendPacket(&respPacket);
-                    mLog.writeLine("Received block: " + block->getHashStr());
+                    mLog.writeLine("Received block: " + PCHAIN->getCurrentBlock()->getHashStr());
                 }
                 else
                 {
-                    mLog.writeLine("Block previous hash mismatch: " + block->getPrevHashStr() + "!=" + PCHAIN->getCurrentBlock()->getHashStr());
-                    delete block;
+                    mLog.writeLine("Block previous hash mismatch.");
                     CPacket respPacket;
                     respPacket.mMessageType = EMT_ERR;
                     pkg->sendPacket(&respPacket);

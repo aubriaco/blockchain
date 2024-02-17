@@ -39,7 +39,7 @@ namespace blockchain
         CChain(const std::string& hostname, bool newChain, const std::string& connectToNode = std::string(), int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE, uint32_t hostPort = 7698, uint32_t connectPort = 7698);     //
         ~CChain();                                                                          //
         void appendToCurrentBlock(uint8_t* data, uint32_t size); 
-        void nextBlock(bool save = true);       // Continue to next block
+        void nextBlock(bool save = true, bool distribute = true);       // Continue to next block
         void distributeBlock(CBlock* block);   // Distribute written block to other nodes
         CBlock* getCurrentBlock(); // Gets a pointer to the current block
         CBlock* getGenesisBlock();
@@ -57,6 +57,7 @@ namespace blockchain
         void insertBlock(CBlock* block);
         void pushBlock(CBlock* block);
         void clear();
+        bool hasHash(uint8_t* hash, uint32_t depth);
     };
 
 }

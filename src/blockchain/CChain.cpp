@@ -74,7 +74,7 @@ namespace blockchain
         mCurrentBlock->appendData(data, size);
     }
 
-    void CChain::nextBlock(bool save)
+    void CChain::nextBlock(bool save, bool distribute)
     {
         mCurrentBlock->calculateHash();
         if(save)
@@ -83,8 +83,12 @@ namespace blockchain
         mChain.push_back(block);
         block->mine(mDifficulty);
         
+        if(distribute)
+            distributeBlock(mCurrentBlock);
         mCurrentBlock = block;
-        distributeBlock(block);
+
+        if(!isValid())
+            throw new std::runtime_error("Chain has been broken!");
     }
 
     void CChain::distributeBlock(CBlock* block)
@@ -215,5 +219,18 @@ namespace blockchain
             delete (*it);
         }
         mChain.clear();
+    }
+
+    bool CChain::hasHash(uint8_t* hash, uint32_t depth)
+    {
+        uint32_t c = 0;
+        CBlock* cur = mCurrentBlock;
+        do
+        {
+            if(memcmp(cur->getHash(), hash, SHA256_DIGEST_LENGTH) == 0)
+                return true;
+            c++;
+        } while ((cur = cur->getPrevBlock()) && (depth == 0 || c <= depth));
+        return false;
     }
 }

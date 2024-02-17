@@ -42,9 +42,9 @@ void printChain(CChain* chain) {
         string tstr(ctime(&ts));
         tstr.resize(tstr.size() - 1);
         if(cur == chain->getCurrentBlock())
-            cout << "Block " << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\t(CURRENT)\n";
+            cout << "CURRENT\t" << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
         else
-            cout << "Block " << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
+            cout << "Block\t" << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
     } while (cur = cur->getPrevBlock());
 }
 
