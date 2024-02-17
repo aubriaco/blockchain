@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.25)
 ## Use the variable PROJECT_NAME for changing the target name
 set( PROJECT_NAME "blockchain" )
 
