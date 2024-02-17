@@ -84,6 +84,7 @@ namespace blockchain
         block->mine(mDifficulty);
         
         mCurrentBlock = block;
+        distributeBlock(block);
     }
 
     void CChain::distributeBlock(CBlock* block)

@@ -234,9 +234,9 @@ namespace blockchain
             else if (responseTo == EMT_WRITE_BLOCK)
             {
                 if (packet->mMessageType == EMT_ACK)
-                {
                     mLog.writeLine("Client " + mHost + ": responded with ACK.");
-                }
+                else if(packet->mMessageType == EMT_ERR)
+                    mLog.writeLine("Client " + mHost + ": responded with ERR.");
             }
         }
 

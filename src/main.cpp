@@ -34,6 +34,20 @@ bool tobool(std::string str)
     return false;
 }
 
+void printChain(CChain* chain) {
+    CBlock *cur = chain->getCurrentBlock();
+    do
+    {
+        time_t ts = cur->getCreatedTS();
+        string tstr(ctime(&ts));
+        tstr.resize(tstr.size() - 1);
+        if(cur == chain->getCurrentBlock())
+            cout << "Block " << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\t(CURRENT)\n";
+        else
+            cout << "Block " << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
+    } while (cur = cur->getPrevBlock());
+}
+
 int main(int argc, char **argv)
 {
     signal(SIGPIPE, SIG_IGN);
@@ -182,15 +196,7 @@ int main(int argc, char **argv)
          << "## BLOCK LIST (Descending)"
          << "\n";
 
-    CBlock *cur = chain.getCurrentBlock();
-    do
-    {
-        time_t ts = cur->getCreatedTS();
-        string tstr(ctime(&ts));
-        tstr.resize(tstr.size() - 1);
-
-        cout << "Block " << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
-    } while (cur = cur->getPrevBlock());
+    printChain(&chain);
 
     // Interrupt Signal
     struct sigaction sigIntHandler;
@@ -200,8 +206,17 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sigIntHandler, NULL);
     sigaction(SIGQUIT, &sigIntHandler, NULL);
 
-    while (chain.isRunning())
+    CBlock* printedBlock = chain.getCurrentBlock();
+
+    while (chain.isRunning()) {
+
         usleep(5000);
+        if(printedBlock != chain.getCurrentBlock())
+        {
+            printChain(&chain);
+            printedBlock = chain.getCurrentBlock();
+        }
+    }
 
     cout << "\nExit.\n";
 

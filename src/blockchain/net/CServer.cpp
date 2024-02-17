@@ -52,6 +52,9 @@ namespace blockchain
             if (setsockopt(mListenerSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
                 std::runtime_error("Could not setup socket receive timeout.");
 
+            int val = true;
+            setsockopt(mListenerSocket, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(int));
+
             memset((char *)&mServerAddr, 0, sizeof(mServerAddr));
             mServerAddr.sin_family = AF_INET;
             mServerAddr.sin_port = htons(mListenPort);                                           // htons (short) -> net (short)
@@ -291,6 +294,29 @@ namespace blockchain
             }
             else if (packet->mMessageType == EMT_WRITE_BLOCK)
             {
+                mLog.writeLine("Received write block packet.");
+                CBlock* block = new CBlock(PCHAIN->getCurrentBlock(), packet->mHash);                    
+                if(memcmp(packet->mPrevHash,PCHAIN->getCurrentBlock()->getHash(),SHA256_DIGEST_LENGTH) != 0)
+                {
+                    uint8_t* data = new uint8_t[packet->mDataSize];
+                    memcpy(data, packet->mData, packet->mDataSize);
+                    block->setAllocatedData(data, packet->mDataSize);
+                    PCHAIN->pushBlock(block);
+                    packet->destroyData();
+                    CPacket respPacket;
+                    respPacket.mMessageType = EMT_ACK;
+                    pkg->sendPacket(&respPacket);
+                    mLog.writeLine("Received block: " + block->getHashStr());
+                }
+                else
+                {
+                    mLog.writeLine("Block previous hash mismatch: " + block->getPrevHashStr() + "!=" + PCHAIN->getCurrentBlock()->getHashStr());
+                    delete block;
+                    CPacket respPacket;
+                    respPacket.mMessageType = EMT_ERR;
+                    pkg->sendPacket(&respPacket);
+                }
+
             }
             else
             {
