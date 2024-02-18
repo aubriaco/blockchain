@@ -23,6 +23,7 @@ namespace blockchain
         class CStorageLocal : public IStorage
         {
         private:
+            static std::string mDefaultBasePath;
             const uint32_t Version = 1;
             const std::string mBasePath = std::string("data/");
             const uint32_t mChunkSize = 2048;
@@ -30,6 +31,8 @@ namespace blockchain
 
             CLog mLog;
         public:
+            static void setDefaultBasePath(const std::string& path);
+
             CStorageLocal();
             ~CStorageLocal();
 

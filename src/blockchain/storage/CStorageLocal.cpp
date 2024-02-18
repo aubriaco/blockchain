@@ -16,7 +16,16 @@ namespace blockchain
 {
     namespace storage
     {
-        CStorageLocal::CStorageLocal() : mLog("Storage")
+        std::string CStorageLocal::mDefaultBasePath("data/");
+
+        void CStorageLocal::setDefaultBasePath(const std::string& path)
+        {
+            mDefaultBasePath = path;
+            if(path.size() > 1 && path[path.size()-1] != '/')
+                mDefaultBasePath.push_back('/');
+        }
+
+        CStorageLocal::CStorageLocal() : mLog("Storage"), mBasePath(mDefaultBasePath)
         {
             struct stat info;
             if(stat(mBasePath.c_str(), &info) != 0 || !(info.st_mode & S_IFDIR))

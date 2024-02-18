@@ -7,6 +7,7 @@
  * in the source distribution.
  */
 #include "blockchain/CChain.h"
+#include "blockchain/storage/CStorageLocal.h"
 #include <iostream>
 #include <ctime>
 #include <unistd.h>
@@ -118,11 +119,13 @@ int main(int argc, char **argv)
     {
         if (params["s"] == "none")
             storageType = storage::EST_NONE;
+        else
+            storage::CStorageLocal::setDefaultBasePath(params["s"]);
     }
 
     cout << "Start.\n";
 
-    CChain chain(host, isNewChain, connectTo, 1, storageType, hostPort, connectPort);
+    CChain chain(host, hostPort, isNewChain, connectTo, 1, storageType, connectPort);
     gChain = &chain;
 
     cout << "Chain intialized!\n";

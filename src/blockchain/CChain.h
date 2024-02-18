@@ -35,8 +35,8 @@ namespace blockchain
         bool mReady;
         CLog mLog;
     public:
-        CChain(const std::string& hostname, int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE, uint32_t hostPort = 7698);
-        CChain(const std::string& hostname, bool newChain, const std::string& connectToNode = std::string(), int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE, uint32_t hostPort = 7698, uint32_t connectPort = 7698);     //
+        CChain(const std::string& hostname, uint32_t hostPort = 7698, int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE);
+        CChain(const std::string& hostname, uint32_t hostPort = 7698, bool newChain = false, const std::string& connectToNode = std::string(), int difficulty = 0, storage::E_STORAGE_TYPE storageType = storage::EST_NONE, uint32_t connectPort = 7698);     //
         ~CChain();                                                                          //
         void appendToCurrentBlock(uint8_t* data, uint32_t size); 
         void nextBlock(bool save = true, bool distribute = true);       // Continue to next block

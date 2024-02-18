@@ -14,7 +14,7 @@
 
 namespace blockchain
 {
-    CChain::CChain(const std::string& hostname, int difficulty, storage::E_STORAGE_TYPE storageType, uint32_t hostPort) : mLog("Chain")
+    CChain::CChain(const std::string& hostname, uint32_t hostPort, int difficulty, storage::E_STORAGE_TYPE storageType) : mLog("Chain")
     {
         CLog::open(false);
         mRunning = true;
@@ -33,7 +33,7 @@ namespace blockchain
         mReady = true;
     }
 
-    CChain::CChain(const std::string& hostname, bool newChain, const std::string& connectToNode, int difficulty, storage::E_STORAGE_TYPE storageType, uint32_t hostPort, uint32_t connectPort) : CChain(hostname, difficulty, storageType, hostPort)
+    CChain::CChain(const std::string& hostname, uint32_t hostPort, bool newChain, const std::string& connectToNode, int difficulty, storage::E_STORAGE_TYPE storageType, uint32_t connectPort) : CChain(hostname, hostPort, difficulty, storageType)
     {
         if(!newChain)
         {
