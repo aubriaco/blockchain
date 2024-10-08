@@ -68,6 +68,7 @@ namespace blockchain
 
             void addNodeToList(const std::string& hostname, uint32_t port);
 
+            // Process a Packet Received from another node
             void processPacket(CSocketPackage* pkg, CPacket* packet, bool* pingConfirm);
 
         public:

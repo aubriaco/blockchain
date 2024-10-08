@@ -239,6 +239,7 @@ namespace blockchain
 
         void CServer::processPacket(CSocketPackage *pkg, CPacket *packet, bool *pingConfirm)
         {
+            // Received a PING
             if (packet->mMessageType == EMT_PING)
             {
                 if (!*pingConfirm)
@@ -248,6 +249,8 @@ namespace blockchain
                 }
                 pkg->sendPacket(packet);
             }
+
+            // Initialize Chain
             else if (packet->mMessageType == EMT_INIT_CHAIN)
             {
                 if (PCHAIN->getChainPtr()->size() > 0)
@@ -292,6 +295,9 @@ namespace blockchain
                 }
                 
             }
+            
+
+            // Distribute new block
             else if (packet->mMessageType == EMT_WRITE_BLOCK)
             {
                 if(PCHAIN->hasHash(packet->mHash, 0))
@@ -321,6 +327,8 @@ namespace blockchain
                 }
 
             }
+
+            // Error unknown packet
             else
             {
                 throw std::runtime_error(std::string("Unknown packet received: ") + std::to_string(packet->mMessageType));

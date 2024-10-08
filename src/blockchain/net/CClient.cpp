@@ -93,6 +93,7 @@ namespace blockchain
                 if (setsockopt(mSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeval)) < 0)
                     std::runtime_error("Could not setup socket timeout.");
 
+                // Register node hostname
                 CPacket writePacket, gotPacket;
                 writePacket.mMessageType = EMT_NODE_REGISTER;
                 mLog.writeLine("Hostname size: " + std::to_string(PCHAIN->getHostName().size()));
@@ -106,6 +107,7 @@ namespace blockchain
 
                 mLog.writeLine("Server has acknoledged client.");
 
+                // Register node port for other node to connect back as a client
                 writePacket.reset();
                 writePacket.mMessageType = EMT_NODE_REGISTER_PORT;
                 uint32_t netPort = PCHAIN->getNetPort();
@@ -119,8 +121,10 @@ namespace blockchain
 
                 bool initialized = mChild;
 
+                // Main loop
                 while (mRunning)
                 {
+                    // Will always ping every 0.5 seconds (maybe this is too little? maybe too much?)
                     writePacket.mMessageType = EMT_PING;
                     sendPacket(&writePacket);
                     gotPacket = recvPacket();
@@ -129,12 +133,14 @@ namespace blockchain
 
                     if (!initialized)
                     {
+                        // Initialize if not initialized
                         init();
                         initialized = true;
                     }
                     if(!mReady)
                         mReady = true;
 
+                    // Process queue
                     while (mQueue.size() > 0)
                     {
                         CPacket next = mQueue.front();
@@ -146,7 +152,7 @@ namespace blockchain
                         mQueue.pop();
                     }
 
-                    usleep(5000);
+                    usleep(50000);
                 }
 
                 gotPacket.destroyData();
@@ -167,10 +173,14 @@ namespace blockchain
         void CClient::init()
         {
             CPacket writePacket;
+
+            // Request initialize chain
             writePacket.mMessageType = EMT_INIT_CHAIN;
             memcpy(writePacket.mHash, PCHAIN->getCurrentBlock()->getHash(), SHA256_DIGEST_LENGTH);
             sendPacket(&writePacket);
             CPacket gotPacket = recvPacket();
+
+            // Returns chain info
             if (gotPacket.mMessageType == EMT_CHAIN_INFO)
             {
                 PCHAIN->clear();
@@ -217,10 +227,18 @@ namespace blockchain
                     throw std::runtime_error("Sync error no blocks.");
                 }
             }
+
+            // Error out no chain info
+            else
+            {
+                mLog.writeLine("Sync error no chain info.");
+                throw std::runtime_error("Sync error no chain info.");
+            }
         }
 
         void CClient::processPacket(CPacket *packet, EMessageType responseTo)
         {
+            // Response from ping request
             if (responseTo == EMT_PING)
             {
                 if (packet->mMessageType != EMT_PING)
@@ -231,6 +249,8 @@ namespace blockchain
                     mPingConfirm = true;
                 }
             }
+            
+            // Response when packet was distributed
             else if (responseTo == EMT_WRITE_BLOCK)
             {
                 if (packet->mMessageType == EMT_ACK)
@@ -245,6 +265,7 @@ namespace blockchain
             mRunning = false;
         }
 
+        // Send distribute block
         void CClient::sendBlock(CBlock *block)
         {
             CPacket packet;
