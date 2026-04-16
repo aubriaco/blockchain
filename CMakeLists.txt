@@ -9,10 +9,11 @@ project(${PROJECT_NAME})
 FILE(GLOB SRCS "${CMAKE_CURRENT_LIST_DIR}/src/blockchain/*.cpp"
                 "${CMAKE_CURRENT_LIST_DIR}/src/blockchain/storage/*.cpp"
                 "${CMAKE_CURRENT_LIST_DIR}/src/blockchain/net/*.cpp"
+                "${CMAKE_CURRENT_LIST_DIR}/src/api/*.cpp"
                 "${CMAKE_CURRENT_LIST_DIR}/src/*.cpp")
 
 ## Define the executable
 add_executable(${PROJECT_NAME} ${SRCS})
 
-target_link_libraries(${PROJECT_NAME} ssl crypto pthread)
+target_link_libraries(${PROJECT_NAME} ssl crypto pthread solusek)
 

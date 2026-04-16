@@ -8,6 +8,7 @@
  */
 #include "blockchain/CChain.h"
 #include "blockchain/storage/CStorageLocal.h"
+#include "api/CAPIServer.h"
 #include <iostream>
 #include <ctime>
 #include <unistd.h>
@@ -35,14 +36,15 @@ bool tobool(std::string str)
     return false;
 }
 
-void printChain(CChain* chain) {
+void printChain(CChain *chain)
+{
     CBlock *cur = chain->getCurrentBlock();
     do
     {
         time_t ts = cur->getCreatedTS();
         string tstr(ctime(&ts));
         tstr.resize(tstr.size() - 1);
-        if(cur == chain->getCurrentBlock())
+        if (cur == chain->getCurrentBlock())
             cout << "CURRENT\t" << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
         else
             cout << "Block\t" << cur->getHashStr() << "\tTimeStamp " << tstr << "\tData Size " << cur->getDataSize() << "\n";
@@ -141,58 +143,6 @@ int main(int argc, char **argv)
 
     CBlock *current = chain.getCurrentBlock();
 
-    if (isNewChain)
-    {
-        uint8_t *garbage = new uint8_t[32];
-        for (uint32_t n = 0; n < 32; n++)
-            garbage[n] = clock() % 255;
-
-        cout << "Garbage generated.\n";
-
-        chain.appendToCurrentBlock(garbage, 32);
-        delete[] garbage;
-
-        cout << "Garbage appended to current block.\n";
-
-        chain.nextBlock();
-
-        cout << "Next block mined.\n";
-
-        cout << "Current Hash: " << chain.getCurrentBlock()->getPrevBlock()->getHashStr() << "\nNonce: " << chain.getCurrentBlock()->getNonce() << "\n";
-
-        garbage = new uint8_t[32];
-        for (uint32_t n = 0; n < 32; n++)
-            garbage[n] = clock() % 255;
-
-        cout << "Garbage generated.\n";
-
-        chain.appendToCurrentBlock(garbage, 32);
-        delete[] garbage;
-
-        cout << "Garbage appended to current block.\n";
-
-        chain.nextBlock();
-
-        cout << "Next block mined.\n";
-
-        cout << "Previous Hash: " << chain.getCurrentBlock()->getPrevBlock()->getHashStr() << "\nNonce: " << chain.getCurrentBlock()->getNonce() << "\n";
-    }
-    else
-    {
-        uint8_t* garbage = new uint8_t[32];
-        for(uint32_t n = 0; n < 32; n++)
-            garbage[n] = clock() % 255;
-        chain.appendToCurrentBlock(garbage, 32);
-        delete[] garbage;
-
-        cout << "Garbage appended to current block.\n";	
-
-        chain.nextBlock();
-
-        cout << "Next block mined.\n";
-
-        cout << "Previous Hash: " << chain.getCurrentBlock()->getPrevBlock()->getHashStr() << "\nNonce: " << chain.getCurrentBlock()->getNonce() << "\n";
-    }
     cout << "Current block count: " << chain.getBlockCount() << "\n";
 
     cout << "\n"
@@ -209,17 +159,11 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &sigIntHandler, NULL);
     sigaction(SIGQUIT, &sigIntHandler, NULL);
 
-    CBlock* printedBlock = chain.getCurrentBlock();
+    CBlock *printedBlock = chain.getCurrentBlock();
 
-    while (chain.isRunning()) {
+    api::CAPIServer apiServer;
 
-        usleep(5000);
-        if(printedBlock != chain.getCurrentBlock())
-        {
-            printChain(&chain);
-            printedBlock = chain.getCurrentBlock();
-        }
-    }
+    apiServer.run();
 
     cout << "\nExit.\n";
 
